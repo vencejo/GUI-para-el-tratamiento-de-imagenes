@@ -9,13 +9,15 @@ import funcionesAuxiliares as aux
 class ImagenTratada():
 	
 	def __init__(self):
-		self.camara = Camera()
+		self.camara = Camera(1)
 		self.rutaImagenOriginal = 'ImagenOriginal.jpg'
 		self.rutaImagenReducida = 'imagenReducida.jpg'
 		self.rutaImagenBlobs = 'imagenBlobs.jpg'
 		self.rutaImagenTratada = 'imagenTratada.jpg'
 		self.angulosHuesos = []		
-		self.articulaciones = []	 
+		self.articulaciones = []
+                self.blobsFiltradosPorForma = []
+                self.todosLosCandidatos = []	 
 		self.AreaBlobs = []
  		self.tiempoTratamiento = 0
  		self.numBlobsCandidatosPorArea = 0
@@ -28,7 +30,7 @@ class ImagenTratada():
 		imgReducida.save(self.rutaImagenReducida)
 		return imgReducida
 
-	def trataImagen(self,img, r, g, b, umbralBinarizado):
+	def trataImagen(self, r, g, b, umbralBinarizado):
 		
 		inicio = time.time()
 		
@@ -43,7 +45,7 @@ class ImagenTratada():
 				
 	def capturaYTrataLaImagen(self, r, g, b,umbralBinarizado):
 		img = self.capturaImagen()
-		self.trataImagen(img, r, g, b, umbralBinarizado)
+		self.trataImagen(r, g, b, umbralBinarizado)
 		return Image(self.rutaImagenTratada)
 		
 	def encuentraYFiltraBlobs(self,areaMin, areaMax, 
@@ -63,7 +65,7 @@ class ImagenTratada():
 			
 			# Busca los blobs de forma circular , los blobs que pasan el filtro
 			# se guardan en la lista self.articulaciones
-			self.filtroPorForma(blobs, toleranciaWH, desviacionD,toleranciaLP)
+			blobs = self.filtroPorForma(blobs, toleranciaWH, desviacionD, toleranciaLP)
 			
 			if dibujarBlobs:
 				self.dibujaBlobs(blobs)
@@ -87,21 +89,29 @@ class ImagenTratada():
 		numero_Iteraciones = 2 
 		
 		self.articulaciones = []
+                self.todosLosCandidatos = []
+                self.blobsFiltradosPorForma = []
 		for blob in blobs:
 			candidato = blob.blobMask()
 			hayCirculo, errorCode = aux.esCirculo(candidato, toleranciaWH, toleranciaLP, desviacionD, numero_Iteraciones)
+                        self.todosLosCandidatos.append(blob)
 			if not hayCirculo and self.enDepuracion :
 				print errorCode
-			else:
+			if hayCirculo:
 				self.articulaciones.append((blob.x, blob.y))
+                                self.blobsFiltradosPorForma.append(blob)
 	
-	def dibujaBlobs(self,blobs):		
-		for blob in blobs:
-			blob.draw(width=4, color=Color.YELLOW)
+	def dibujaBlobs(self, blobs):
+##                if self.todosLosCandidatos:
+##                        for blob in self.todosLosCandidatos:
+##                                blob.draw(width=2, color=Color.YELLOW)
+                if self.blobsFiltradosPorForma:		
+                        for blob in self.blobsFiltradosPorForma:
+                                blob.draw(width=4, color=Color.BLUE)
 			
 	def dibujaEstructura(self, img):
 		if self.articulaciones != []:
-			self.articulaciones = aux.ordenaListaPorDistanciaApunto(self.articulaciones, [0,480])
+                        self.articulaciones = aux.ordenaListaPorDistanciaApunto(self.articulaciones, [0,480])
 			puntoInicial = self.articulaciones.pop()
 			img.dl().circle(puntoInicial, 10, Color.BLUE, width=5)
 			while self.articulaciones != []:
