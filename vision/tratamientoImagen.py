@@ -9,11 +9,12 @@ import funcionesAuxiliares as aux
 class ImagenTratada():
 	
 	def __init__(self):
-		self.camara = Camera(1)
+		self.camara = Camera()
 		self.rutaImagenOriginal = 'ImagenOriginal.jpg'
 		self.rutaImagenReducida = 'imagenReducida.jpg'
 		self.rutaImagenBlobs = 'imagenBlobs.jpg'
-		self.rutaImagenTratada = 'imagenTratada.jpg'
+		self.rutaImagenTratada_Fase1 = 'imagenTratada_fase1.jpg'
+		self.rutaImagenTratada_Fase2 = 'imagenTratada_fase2.jpg'
 		self.angulosHuesos = []		
 		self.articulaciones = []
                 self.blobsFiltradosPorForma = []
@@ -35,9 +36,11 @@ class ImagenTratada():
 		inicio = time.time()
 		
 		img = Image(self.rutaImagenReducida)
-		result = img.colorDistance((r, g, b)).invert()
+		result = img.colorDistance((r, g, b))
+		result.save(self.rutaImagenTratada_Fase1) 
+		result = result.invert()
 		result = result.binarize(umbralBinarizado).invert()
-		result.save(self.rutaImagenTratada)
+		result.save(self.rutaImagenTratada_Fase2) 
 		
 		fin = time.time()
 		self.tiempoTratamiento = fin - inicio
@@ -46,14 +49,15 @@ class ImagenTratada():
 	def capturaYTrataLaImagen(self, r, g, b,umbralBinarizado):
 		img = self.capturaImagen()
 		self.trataImagen(r, g, b, umbralBinarizado)
-		return Image(self.rutaImagenTratada)
+		return Image(self.rutaImagenTratada_Fase1)
 		
 	def encuentraYFiltraBlobs(self,areaMin, areaMax, 
 								   toleranciaWH, desviacionD,
-								   toleranciaLP, dibujarBlobs):
+								   toleranciaLP, tipoDibujo):
 		
-		imagenBlobs = Image(self.rutaImagenTratada).copy()
+		imagenBlobs = Image(self.rutaImagenTratada_Fase2).copy()
 		blobs = imagenBlobs.findBlobs()
+		self.todosLosCandidatos = blobs
 		
 		if blobs:	
 			
@@ -67,9 +71,9 @@ class ImagenTratada():
 			# se guardan en la lista self.articulaciones
 			blobs = self.filtroPorForma(blobs, toleranciaWH, desviacionD, toleranciaLP)
 			
-			if dibujarBlobs:
+			if tipoDibujo == 'blobs':
 				self.dibujaBlobs(blobs)
-			else:
+			elif tipoDibujo == 'estructura':
 				self.dibujaEstructura(imagenBlobs)
 		
 		# La imagen tratada tiene que ser guardada porque sino no funciona
@@ -99,15 +103,15 @@ class ImagenTratada():
 				print errorCode
 			if hayCirculo:
 				self.articulaciones.append((blob.x, blob.y))
-                                self.blobsFiltradosPorForma.append(blob)
+                self.blobsFiltradosPorForma.append(blob)
 	
 	def dibujaBlobs(self, blobs):
-##                if self.todosLosCandidatos:
-##                        for blob in self.todosLosCandidatos:
-##                                blob.draw(width=2, color=Color.YELLOW)
-                if self.blobsFiltradosPorForma:		
-                        for blob in self.blobsFiltradosPorForma:
-                                blob.draw(width=4, color=Color.BLUE)
+		if self.todosLosCandidatos:
+				for blob in self.todosLosCandidatos:
+						blob.draw(width=2, color=Color.YELLOW)
+                #if self.blobsFiltradosPorForma:		
+                        #for blob in self.blobsFiltradosPorForma:
+                                #blob.draw(width=4, color=Color.BLUE)
 			
 	def dibujaEstructura(self, img):
 		if self.articulaciones != []:

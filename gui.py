@@ -1,19 +1,27 @@
 from Tkinter import *
+from tkColorChooser import askcolor
 from tkMessageBox import *
 import ImageTk
 from vision.tratamientoImagen import ImagenTratada
 
-imagenTratada = ImagenTratada()
+
 
 class GUI(Frame):
     def __init__(self, parent=None):
         Frame.__init__(self, parent)
         self.pack(expand=YES, fill=BOTH)
+        self.nivelR = IntVar()
+        self.nivelR.set(125)
+        self.nivelG = IntVar() 
+        self.nivelG.set(125)
+        self.nivelB = IntVar()
+        self.nivelB.set(125)
+        self.imagenTratada = ImagenTratada()
         self.creaElementos()
         self.iniciaVisoresImagenes()
         self.master.title('Control Experimental Brazo Robotico')
         self.master.iconname('Brazo Robot')
-            
+        
     def creaElementos(self):
         self.creaBarraMenus()
         self.creaAreaVisores()
@@ -63,21 +71,21 @@ class GUI(Frame):
         self.creaVisorImagenTratada(self.areaVisores )
             
     def creaVisorImagenOriginal(self, frame):
-        self.imagenOriginal = Label(frame)
-        self.imagenOriginal.pack(side=LEFT)
+        self.visorImagenOriginal = Label(frame)
+        self.visorImagenOriginal.pack(side=LEFT)
         
     def creaVisorImagenTratada(self, frame):
-        self.imagenTratada = Label(frame)
-        self.imagenTratada.pack(side=TOP)
+        self.visorImagenTratada = Label(frame)
+        self.visorImagenTratada.pack(side=TOP)
         
     def creaVisorImagenBlobs(self, frame):
-        self.imagenBlobs = Label(frame)
-        self.imagenBlobs.pack(side=RIGHT)
+        self.visorImagenBlobs = Label(frame)
+        self.visorImagenBlobs.pack(side=RIGHT)
         
     def creaAreaControlesImagenOriginal(self):
         self.areaControlesImg = Frame(self, cursor='hand2', relief=SUNKEN, bd=2)
         self.areaControlesImg.pack(side=LEFT, fill=X)
-        self.creaDeslizablesRGB(self.areaControlesImg)
+        self.creaSelectorColor(self.areaControlesImg)
         self.creaDeslizableBinarizado(self.areaControlesImg)
         
     def creaAreaControlesImagenTratada(self):
@@ -92,39 +100,12 @@ class GUI(Frame):
         self.creaSelectorVisualizacion(self.areaControlesTratada)
         
         
-    def creaDeslizablesRGB(self, frame):
-        self.nivelR = IntVar()
-        self.nivelG = IntVar()
-        self.nivelB = IntVar()
-        self.deslizableR = Scale(frame, label = 'R ',
-                                            variable=self.nivelR,
-                                            from_=0, to=254,
-                                            tickinterval=40,
-                                            resolution=1,
-                                            orient='horizontal',
-                                            length=320)
-        self.deslizableR.pack()
-        self.nivelR.set(125)
-        
-        self.deslizableG = Scale(frame, label = 'G ',
-                                            variable=self.nivelG,
-                                            from_=0, to=255,
-                                            tickinterval=40,
-                                            resolution=1,
-                                            orient='horizontal',
-                                            length=320)
-        self.deslizableG.pack()
-        self.nivelG.set(125)
-        
-        self.deslizableB = Scale(frame, label = 'B ',
-                                            variable=self.nivelB,
-                                            from_=0, to=255,
-                                            tickinterval=40,
-                                            resolution=1,
-                                            orient='horizontal',
-                                            length=320)
-        self.deslizableB.pack()
-        self.nivelB.set(125)
+    def creaSelectorColor(self, frame):
+       
+        self.selectorColor = Button(frame, text = 'Selector Color ',
+                                            command=askcolor)
+        self.selectorColor.pack()
+
         
     def creaDeslizableBinarizado(self, frame):
         self.nivelBinarizado = IntVar()
@@ -196,6 +177,11 @@ class GUI(Frame):
         
     def creaSelectorVisualizacion(self, frame):
         self.tipoVisualizacion = StringVar()
+        self.selectorVisualizacionNada = Radiobutton(frame, 
+                                                 text= 'Ver Nada',
+                                                 variable=self.tipoVisualizacion,
+                                                 value='nada')
+        self.selectorVisualizacionNada.pack(anchor=NW) 
         self.selectorVisualizacionBlobs = Radiobutton(frame, 
                                                  text= 'Ver blobs',
                                                  variable=self.tipoVisualizacion,
@@ -213,39 +199,36 @@ class GUI(Frame):
         self.actualizaVisorImagenOriginal()
         
     def actualizaVisorImagenOriginal(self):
-        img = imagenTratada.capturaImagen()
+        img = self.imagenTratada.capturaImagen()
         photo = ImageTk.PhotoImage(img.getPIL())
-        self.imagenOriginal.photo = photo
-        self.imagenOriginal.configure(image=photo)
-        self.imagenOriginal.after(10, self.actualizaVisorImagenTratada)
+        self.visorImagenOriginal.photo = photo
+        self.visorImagenOriginal.configure(image=photo)
+        self.visorImagenOriginal.after(10, self.actualizaVisorImagenTratada)
         
     def actualizaVisorImagenTratada(self):
-        img = imagenTratada.capturaYTrataLaImagen(self.nivelR.get(), 
+        img = self.imagenTratada.capturaYTrataLaImagen(self.nivelR.get(), 
                                                   self.nivelG.get(),
                                                   self.nivelB.get(),
                                                   self.nivelBinarizado.get()
                                                   )
         photo = ImageTk.PhotoImage(img.getPIL())
-        self.imagenTratada.photo = photo
-        self.imagenTratada.configure(image=photo)
-        self.imagenTratada.after(10, self.actualizaVisorImagenBlobs)
+        self.visorImagenTratada.photo = photo
+        self.visorImagenTratada.configure(image=photo)
+        self.visorImagenTratada.after(10, self.actualizaVisorImagenBlobs)
         
     def actualizaVisorImagenBlobs(self):
-        if self.tipoVisualizacion.get()  == 'blobs':
-            verBlobs = True
-        else:
-            verBlobs = False
-##        print self.toleranciaWH.get(), self.desviacionD.get(), self.toleranciaLP.get()                    
-        img = imagenTratada.encuentraYFiltraBlobs(self.areaMin.get(),
+      
+		## print self.toleranciaWH.get(), self.desviacionD.get(), self.toleranciaLP.get()                    
+        img = self.imagenTratada.encuentraYFiltraBlobs(self.areaMin.get(),
                                                   self.areaMax.get(),
                                                   self.toleranciaWH.get(), 
                                                   self.desviacionD.get(),
                                                   self.toleranciaLP.get(),
-                                                  verBlobs)
+                                                  self.tipoVisualizacion.get())
         photo = ImageTk.PhotoImage(img.getPIL())
-        self.imagenBlobs.photo = photo
-        self.imagenBlobs.configure(image=photo)
-        self.imagenBlobs.after(10, self.actualizaVisorImagenOriginal)
+        self.visorImagenBlobs.photo = photo
+        self.visorImagenBlobs.configure(image=photo)
+        self.visorImagenBlobs.after(10, self.actualizaVisorImagenOriginal)
         
         
 if __name__ == '__main__':
