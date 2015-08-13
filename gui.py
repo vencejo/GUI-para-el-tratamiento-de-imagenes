@@ -2,8 +2,8 @@ from Tkinter import *
 from tkColorChooser import askcolor
 from tkMessageBox import *
 import ImageTk
-from vision.tratamientoImagen import ImagenTratada
-
+from imagen.tratamientoImagen import ImagenTratada
+from imagen.ajustes import Ajustes , cargaAjustes
 
 
 class GUI(Frame):
@@ -16,9 +16,10 @@ class GUI(Frame):
 		self.nivelG.set(125)
 		self.nivelB = IntVar()
 		self.nivelB.set(125)
+		self.ajustes = Ajustes()
 		self.imagenTratada = ImagenTratada()
 		self.creaElementos()
-		self.iniciaVisoresImagenes()
+		self.iniciaAjustesyVisoresImagenes()
 		self.master.title('Control Experimental Brazo Robotico')
 		self.master.iconname('Brazo Robot')
 		
@@ -38,8 +39,8 @@ class GUI(Frame):
 		
 	def menuArchivo(self):
 		miniMenu = Menu(self.menubar)
-		miniMenu.add_command(label='Abrir...', command=self.aunPorHacer)
-		miniMenu.add_command(label='Guardar...', command=self.aunPorHacer)
+		miniMenu.add_command(label='Abrir...', command=self.cargaAjustes)
+		miniMenu.add_command(label='Guardar...', command=self.guardaAjustes)
 		miniMenu.add_command(label='Salir...', command=self.quit)
 		self.menubar.add_cascade(label='Archivo', underline=0, menu=miniMenu)
 		
@@ -55,7 +56,30 @@ class GUI(Frame):
 		miniMenu.add_command(label='Zoom -...', command=self.aunPorHacer)
 		miniMenu.add_command(label='Capturar Imagen...', command=self.quit)
 		self.menubar.add_cascade(label='Imagen', underline=0, menu=miniMenu)
+	
+	def guardaAjustes(self):
+		self.ajustes.guardaAjustes('ajustes.json')
+	
+	def cargaAjustes(self):	
+		self.ajustes = cargaAjustes('ajustes.json')
+		self.actualizaControlesSegunAjustes()
 		
+	def actualizaControlesSegunAjustes(self):
+		self.nivelR.set(self.ajustes.r)
+		self.nivelG.set(self.ajustes.g)
+		self.nivelB.set(self.ajustes.b)
+		self.nivelBinarizado.set(self.ajustes.umbralBinarizado)
+		self.areaMin.set(self.ajustes.areaMin)
+		self.areaMax.set(self.ajustes.areaMax)
+		self.toleranciaWH.set(self.ajustes.toleranciaWH)
+		self.desviacionD.set(self.ajustes.desviacionD)
+		self.toleranciaLP.set(self.ajustes.toleranciaLP)
+		self.visorColor.config(  bg= self.conversorRGBaHEX() )
+	
+	def conversorRGBaHEX(self):
+		rgb = (self.nivelR.get(),self.nivelG.get(),self.nivelB.get())
+		return '#' + "".join(map(chr, rgb)).encode('hex')
+			
 	def aunPorHacer(self):
 		print "Funcion aun por implementar"
 		
@@ -118,11 +142,14 @@ class GUI(Frame):
 		self.preguntaElColor()
 		
 	def preguntaElColor(self):
-		self.color = askcolor(color="#000000", title="Selector de color")
-		self.nivelR.set(self.color[0][0])
-		self.nivelG.set(self.color[0][1])
-		self.nivelB.set(self.color[0][2])
-		self.actualizaVisorColor()
+		colorDevuelto = askcolor(color="#000000", title="Selector de color")
+		
+		if colorDevuelto[0] is not None:
+			self.color = colorDevuelto		 
+			self.nivelR.set(self.color[0][0])
+			self.nivelG.set(self.color[0][1])
+			self.nivelB.set(self.color[0][2])
+			self.actualizaVisorColor()
 			
 	def creaSelectorColor(self, frame):
 	   
@@ -220,9 +247,34 @@ class GUI(Frame):
 		self.tipoVisualizacion.set('blobs')
 	
 		
-	def iniciaVisoresImagenes(self):
-		self.actualizaVisorImagenOriginal()
+	def iniciaAjustesyVisoresImagenes(self):
 		
+		self.actualizaAjustes()
+		
+	# ------------------------------------------------------------------
+	# Ejecucion en ciclica de las siguientes funciones
+	
+	# actualizaAjustes ->
+	# actualizaVisorImagenOriginal ->
+	# actualizaVisorImagenTratada ->
+	# actualizaVisorImagenBlobs ->
+	# actualizaAjustes -> etc ...
+	# ------------------------------------------------------------------
+	
+	def actualizaAjustes(self):
+		
+		self.ajustes.actualizaAjustes(self.nivelR.get(),
+									  self.nivelG.get() , 
+									  self.nivelB.get(), 
+									  self.nivelBinarizado.get(), 
+									  self.areaMin.get(), 
+									  self.areaMax.get(), 
+									  self.toleranciaWH.get(), 
+									  self.desviacionD.get(),
+									  self.toleranciaLP.get() )
+							 
+		self.actualizaVisorImagenOriginal()
+			
 	def actualizaVisorImagenOriginal(self):
 		img = self.imagenTratada.capturaImagen()
 		photo = ImageTk.PhotoImage(img.getPIL())
@@ -253,7 +305,11 @@ class GUI(Frame):
 		photo = ImageTk.PhotoImage(img.getPIL())
 		self.visorImagenBlobs.photo = photo
 		self.visorImagenBlobs.configure(image=photo)
-		self.visorImagenBlobs.after(10, self.actualizaVisorImagenOriginal)
+		self.visorImagenBlobs.after(10, self.actualizaAjustes())
+		
+	# ------------------------------------------------------------------
+	# Fin de un ciclo de ejecion
+	# ------------------------------------------------------------------
 		
 	def ponerSeparadores(self, frame, num):
 		for i in range(num):
