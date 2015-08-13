@@ -86,12 +86,7 @@ class GUI(Frame):
 		self.areaControlesImg = Frame(self, cursor='hand2', relief=SUNKEN, bd=2)
 		self.areaControlesImg.pack(side=LEFT, fill=X)
 		self.creaAreaSeleccionColor(self.areaControlesImg)
-		Label(self.areaControlesImg, text = "                             ").pack(side=TOP, 
-																				expand=YES, 
-																				fill=X)
-		Label(self.areaControlesImg, text = "                             ").pack(side=TOP, 
-																				expand=YES, 
-																				fill=X)
+		self.ponerSeparadores(self.areaControlesImg, 2)
 		self.creaDeslizableBinarizado(self.areaControlesImg)
 		
 	def creaAreaControlesImagenTratada(self):
@@ -259,6 +254,12 @@ class GUI(Frame):
 		self.visorImagenBlobs.photo = photo
 		self.visorImagenBlobs.configure(image=photo)
 		self.visorImagenBlobs.after(10, self.actualizaVisorImagenOriginal)
+		
+	def ponerSeparadores(self, frame, num):
+		for i in range(num):
+			Label(frame, text = "                             ").pack(side=TOP, 
+																	  expand=YES, 
+																	  fill=X)
 		
 		
 if __name__ == '__main__':
