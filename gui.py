@@ -1,4 +1,5 @@
 from Tkinter import *
+from tkFileDialog import askopenfilename, asksaveasfilename
 from tkColorChooser import askcolor
 from tkMessageBox import *
 import ImageTk
@@ -39,8 +40,8 @@ class GUI(Frame):
 		
 	def menuArchivo(self):
 		miniMenu = Menu(self.menubar)
-		miniMenu.add_command(label='Abrir...', command=self.cargaAjustes)
-		miniMenu.add_command(label='Guardar...', command=self.guardaAjustes)
+		miniMenu.add_command(label='Cargar Ajustes...', command=self.cargaAjustes)
+		miniMenu.add_command(label='Guardar Ajustes...', command=self.guardaAjustes)
 		miniMenu.add_command(label='Salir...', command=self.quit)
 		self.menubar.add_cascade(label='Archivo', underline=0, menu=miniMenu)
 		
@@ -58,10 +59,13 @@ class GUI(Frame):
 		self.menubar.add_cascade(label='Imagen', underline=0, menu=miniMenu)
 	
 	def guardaAjustes(self):
-		self.ajustes.guardaAjustes('ajustes.json')
+		archivo = asksaveasfilename(defaultextension = 'json',
+									initialdir='/imagen/MisAjustes')
+		self.ajustes.guardaAjustes(archivo)
 	
 	def cargaAjustes(self):	
-		self.ajustes = cargaAjustes('ajustes.json')
+		archivo = askopenfilename(initialdir='/imagen/MisAjustes')
+		self.ajustes = cargaAjustes(archivo)
 		self.actualizaControlesSegunAjustes()
 		
 	def actualizaControlesSegunAjustes(self):

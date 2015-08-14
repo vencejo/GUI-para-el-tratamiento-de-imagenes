@@ -9,11 +9,11 @@ class ImagenTratada():
 	
 	def __init__(self, ):
 		self.camara = Camera()
-		self.rutaImagenOriginal = 'ImagenOriginal.jpg'
-		self.rutaImagenReducida = 'imagenReducida.jpg'
-		self.rutaImagenBlobs = 'imagenBlobs.jpg'
-		self.rutaImagenTratada_Fase1 = 'imagenTratada_fase1.jpg'
-		self.rutaImagenTratada_Fase2 = 'imagenTratada_fase2.jpg'
+		self.rutaImagenOriginal = 'imagen/imagenesGuardadas/ImagenOriginal.jpg'
+		self.rutaImagenReducida = 'imagen/imagenesGuardadas/imagenReducida.jpg'
+		self.rutaImagenBlobs = 'imagen/imagenesGuardadas/imagenBlobs.jpg'
+		self.rutaImagenTratada_Fase1 = 'imagen/imagenesGuardadas/imagenTratada_fase1.jpg'
+		self.rutaImagenTratada_Fase2 = 'imagen/imagenesGuardadas/imagenTratada_fase2.jpg'
 		self.angulosHuesos = []		
 		self.articulaciones = []
 		self.blobsFiltradosPorForma = []
