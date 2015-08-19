@@ -2,7 +2,6 @@ from SimpleCV import Camera, Display, Image, ColorCurve, Color, cv2
 import time
 from math import sqrt, atan2, degrees, pi
 import numpy as np
-import time
 import funcionesAuxiliares as aux
 
 class ImagenTratada():
@@ -19,7 +18,6 @@ class ImagenTratada():
 		self.blobsFiltradosPorForma = []
 		self.todosLosCandidatos = []	 
 		self.AreaBlobs = []
- 		self.tiempoTratamiento = 0
  		self.numBlobsCandidatosPorArea = 0
  		self.enDepuracion = False
  		
@@ -33,8 +31,6 @@ class ImagenTratada():
 
 	def trataImagen(self, r, g, b, umbralBinarizado):
 		
-		inicio = time.time()
-		
 		img = Image(self.rutaImagenReducida)
 		result = img.colorDistance((r, g, b))
 		result.save(self.rutaImagenTratada_Fase1) 
@@ -42,8 +38,6 @@ class ImagenTratada():
 		result = result.binarize(umbralBinarizado).invert()
 		result.save(self.rutaImagenTratada_Fase2) 
 		
-		fin = time.time()
-		self.tiempoTratamiento = fin - inicio
 		#self.depuracion()
 				
 	def capturaYTrataLaImagen(self, r, g, b,umbralBinarizado):
@@ -59,7 +53,7 @@ class ImagenTratada():
 		blobs = imagenBlobs.findBlobs()
 		self.todosLosCandidatos = blobs
 		
-		if blobs:	
+		if blobs != []:	
 			
 			blobs.image = imagenBlobs
 			

@@ -1,11 +1,16 @@
+# Doble importacion para evitar los conflictos de nombres entre el 
+# Message de Tkinter y el de tkMessageBox, 
+# vease la funcion creaVisorMensajes para mas info
+import Tkinter
 from Tkinter import *
+
 from tkFileDialog import askopenfilename, asksaveasfilename
 from tkColorChooser import askcolor
 from tkMessageBox import *
 import ImageTk
 from imagen.tratamientoImagen import ImagenTratada
 from imagen.ajustes import Ajustes , cargaAjustes
-
+import time
 
 class GUI(Frame):
 	def __init__(self, parent=None):
@@ -18,11 +23,14 @@ class GUI(Frame):
 		self.nivelB = IntVar()
 		self.nivelB.set(125)
 		self.ajustes = Ajustes()
+		self.tiempoInicial = 0
+		self.tiempoFinal = 0
+		self.tiempoDeEjecucion = 0
 		self.imagenTratada = ImagenTratada()
 		self.creaElementos()
 		self.iniciaAjustesyVisoresImagenes()
-		self.master.title('Control Experimental Brazo Robotico')
-		self.master.iconname('Brazo Robot')
+		self.master.title('Ajustes Visuales para el Control Experimental Brazo Robotico')
+		self.master.iconname('Ajustes Visuales')
 		
 	def creaElementos(self):
 		self.creaBarraMenus()
@@ -30,6 +38,7 @@ class GUI(Frame):
 		self.creaAreaControlesImagenOriginal()
 		self.creaAreaControlesImagenTratada()
 		self.creaAreaControlesVisualizacion()
+		self.creaAreaVisorMensajes()
 			
 	def creaBarraMenus(self):
 		self.menubar = Menu(self.master)
@@ -127,6 +136,11 @@ class GUI(Frame):
 		self.areaControlesTratada = Frame(self, cursor='hand2', relief=SUNKEN, bd=2)
 		self.areaControlesTratada.pack(side=TOP, fill=X)
 		self.creaSelectorVisualizacion(self.areaControlesTratada)
+		
+	def creaAreaVisorMensajes(self):
+		self.areaVisorMensaje = Frame(self, cursor='hand2', relief=SUNKEN, bd=2)
+		self.areaVisorMensaje.pack(side=TOP, fill=X)
+		self.creaVisorMensajes(self.areaVisorMensaje)
 	  
 	def creaAreaSeleccionColor(self,frame):
 		self.areaSeleccionColor = Frame(frame, cursor='hand2', relief=SUNKEN, bd=2)
@@ -250,6 +264,12 @@ class GUI(Frame):
 		self.selectorVisualizacionEstructura.pack(anchor=NW)                                         
 		self.tipoVisualizacion.set('blobs')
 	
+	def creaVisorMensajes(self, frame):
+		self.mensaje = Tkinter.Message(frame)
+		self.mensaje.config(font=('times', 11, 'italic'))
+		self.mensaje.pack(side=LEFT)
+		
+	
 		
 	def iniciaAjustesyVisoresImagenes(self):
 		
@@ -267,6 +287,7 @@ class GUI(Frame):
 	
 	def actualizaAjustes(self):
 		
+		self.tiempoInicial = time.time()
 		self.ajustes.actualizaAjustes(self.nivelR.get(),
 									  self.nivelG.get() , 
 									  self.nivelB.get(), 
@@ -309,10 +330,18 @@ class GUI(Frame):
 		photo = ImageTk.PhotoImage(img.getPIL())
 		self.visorImagenBlobs.photo = photo
 		self.visorImagenBlobs.configure(image=photo)
-		self.visorImagenBlobs.after(10, self.actualizaAjustes())
+		self.tiempoFinal = time.time()
+		self.tiempoDeEjecucion = self.tiempoFinal - self.tiempoInicial
+		#print (self.tiempoDeEjecucion)
+		self.visorImagenBlobs.after(10, self.actualizaVisorMensajes())
+		
+	def actualizaVisorMensajes(self):
+		texto = "Tiempo de procesado {0:0.2f} seg ".format(self.tiempoDeEjecucion)
+		self.mensaje.config(text=texto)
+		self.actualizaAjustes()
 		
 	# ------------------------------------------------------------------
-	# Fin de un ciclo de ejecion
+	# Fin de un ciclo de ejecucion
 	# ------------------------------------------------------------------
 		
 	def ponerSeparadores(self, frame, num):
