@@ -3,11 +3,14 @@ import time
 from math import sqrt, atan2, degrees, pi
 import numpy as np
 import funcionesAuxiliares as aux
+from ajustes import Ajustes 
 
 class ImagenTratada():
 	
-	def __init__(self, ):
+	def __init__(self ):
 		self.camara = Camera()
+		self.archivoAjustesPorDefecto = '/home/cubie/Guhorus/Brazo mas Vision/GUI-para-el-control-visual-de-brazo-robotico/imagen/MisAjustes/ajustesBuenos.json'
+		self.cargaAjustes()
 		self.rutaImagenOriginal = 'imagen/imagenesGuardadas/ImagenOriginal.jpg'
 		self.rutaImagenReducida = 'imagen/imagenesGuardadas/imagenReducida.jpg'
 		self.rutaImagenBlobs = 'imagen/imagenesGuardadas/imagenBlobs.jpg'
@@ -21,6 +24,9 @@ class ImagenTratada():
  		self.numBlobsCandidatosPorArea = 0
  		self.enDepuracion = False
  		
+ 	def cargaAjustes(self, archivo='/home/cubie/Guhorus/Brazo mas Vision/GUI-para-el-control-visual-de-brazo-robotico/imagen/MisAjustes/ajustesBuenos.json'):	
+		self.ajustes = Ajustes()
+		self.ajustes.cargaAjustes(archivo)
 		
 	def capturaImagen(self):
 		img = self.camara.getImage()
@@ -29,25 +35,23 @@ class ImagenTratada():
 		imgReducida.save(self.rutaImagenReducida)
 		return imgReducida
 
-	def trataImagen(self, r, g, b, umbralBinarizado):
+	def trataImagen(self):
 		
 		img = Image(self.rutaImagenReducida)
-		result = img.colorDistance((r, g, b))
+		result = img.colorDistance((self.ajustes.r, self.ajustes.g, self.ajustes.b))
 		result.save(self.rutaImagenTratada_Fase1) 
 		result = result.invert()
-		result = result.binarize(umbralBinarizado).invert()
+		result = result.binarize(float(self.ajustes.umbralBinarizado)).invert()
 		result.save(self.rutaImagenTratada_Fase2) 
 		
 		#self.depuracion()
 				
-	def capturaYTrataLaImagen(self, r, g, b,umbralBinarizado):
+	def capturaYTrataLaImagen(self):
 		img = self.capturaImagen()
-		self.trataImagen(r, g, b, umbralBinarizado)
+		self.trataImagen()
 		return Image(self.rutaImagenTratada_Fase1)
 		
-	def encuentraYFiltraBlobs(self,areaMin, areaMax, 
-								   toleranciaWH, desviacionD,
-								   toleranciaLP, tipoDibujo):
+	def encuentraYFiltraBlobs(self, tipoDibujo):
 		
 		imagenBlobs = Image(self.rutaImagenTratada_Fase2).copy()
 		blobs = imagenBlobs.findBlobs()
@@ -58,12 +62,12 @@ class ImagenTratada():
 			blobs.image = imagenBlobs
 			
 			self.areaBlobs = blobs.area()
-			blobs = self.filtroPorArea(blobs, areaMin, areaMax)
+			blobs = self.filtroPorArea(blobs)
 			self.numBlobsCandidatosPorArea = len(blobs)
 			
 			# Busca los blobs de forma circular , los blobs que pasan el filtro
 			# se guardan en la lista self.articulaciones
-			blobs = self.filtroPorForma(blobs, toleranciaWH, desviacionD, toleranciaLP)
+			blobs = self.filtroPorForma(blobs)
 			
 			if tipoDibujo == 'blobs':
 				self.dibujaBlobs(blobs)
@@ -75,10 +79,10 @@ class ImagenTratada():
 		imagenBlobs.save(self.rutaImagenBlobs)
 		return Image(self.rutaImagenBlobs)
 		
-	def filtroPorArea(self, blobs, areaMin, areaMax):
-		return blobs.filter((blobs.area()> areaMin) & (blobs.area()< areaMax))
+	def filtroPorArea(self, blobs):
+		return blobs.filter((blobs.area()> self.ajustes.areaMin) & (blobs.area()< self.ajustes.areaMax))
 		
-	def filtroPorForma(self, blobs, toleranciaWH, desviacionD,toleranciaLP ):
+	def filtroPorForma(self, blobs ):
 		""" Busca los blobs de forma circular , los blobs que pasan el filtro
 		se guardan en la lista self.articulaciones"""
 		
@@ -89,13 +93,22 @@ class ImagenTratada():
                 self.blobsFiltradosPorForma = []
 		for blob in blobs:
 			candidato = blob.blobMask()
-			hayCirculo, errorCode = aux.esCirculo(candidato, toleranciaWH, toleranciaLP, desviacionD, numero_Iteraciones)
+			hayCirculo, errorCode = aux.esCirculo(candidato, self.ajustes.toleranciaWH,
+												  self.ajustes.toleranciaLP, 
+												  self.ajustes.desviacionD, 
+												  numero_Iteraciones)
                         self.todosLosCandidatos.append(blob)
 			if not hayCirculo and self.enDepuracion :
 				print errorCode
 			if hayCirculo:
 				self.articulaciones.append((blob.x, blob.y))
                 self.blobsFiltradosPorForma.append(blob)
+                
+	def capturaTrataYFiltraBlobsDeImagen(self,tipoDibujo):
+		img = self.capturaImagen()
+		self.trataImagen()
+		self.encuentraYFiltraBlobs(tipoDibujo)
+		return Image(self.rutaImagenBlobs)
 	
 	def dibujaBlobs(self, blobs):
 		if self.todosLosCandidatos:

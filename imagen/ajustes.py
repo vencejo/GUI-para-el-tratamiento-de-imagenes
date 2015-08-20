@@ -36,11 +36,18 @@ class Ajustes():
 			archivoSalida.write(datos)
 			
 	
-def cargaAjustes(nombreArchivo):
-	with open(nombreArchivo, 'r') as archivoEntrada:
-			datos = archivoEntrada.read()
-			ajustes = json.loads(datos, object_hook=decodificaAjustes)
-	return ajustes
+	def cargaAjustes(self, nombreArchivo):
+		with open(nombreArchivo, 'r') as archivoEntrada:
+				datos = archivoEntrada.read()
+				ajustes = json.loads(datos, object_hook=decodificaAjustes)
+				self.actualizaAjustes( ajustes.r, ajustes.g , 
+								ajustes.b, ajustes.umbralBinarizado, 
+								ajustes.areaMin, ajustes.areaMax, 
+								ajustes.toleranciaWH,
+								ajustes.desviacionD, 
+								ajustes.toleranciaLP)
+				
+	
 			
 		
 class CodificadorAjustes(json.JSONEncoder):
@@ -60,12 +67,12 @@ class CodificadorAjustes(json.JSONEncoder):
 def decodificaAjustes(dic):
 	if dic.get('r'):
 		ajustes = Ajustes()
-		ajustes.actualizaAjustes( dic['r'], dic['g'] , dic['b'], 
-								  dic['umbralBinarizado'], 
-								  dic['areaMin'], dic['areaMax'], 
-								  dic['toleranciaWH'],
-								  dic['desviacionD'], 
-								  dic['toleranciaLP'] )
+		ajustes.actualizaAjustes( int(dic['r']), int(dic['g']) , int(dic['b']), 
+								  int(dic['umbralBinarizado']), 
+								  int(dic['areaMin']), int(dic['areaMax']), 
+								  float(dic['toleranciaWH']),
+								  float(dic['desviacionD']), 
+								  float(dic['toleranciaLP']) )
 		return ajustes
 	else:
 		return dic

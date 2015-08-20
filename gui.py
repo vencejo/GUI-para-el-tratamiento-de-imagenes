@@ -9,7 +9,6 @@ from tkColorChooser import askcolor
 from tkMessageBox import *
 import ImageTk
 from imagen.tratamientoImagen import ImagenTratada
-from imagen.ajustes import Ajustes , cargaAjustes
 import time
 
 class GUI(Frame):
@@ -22,7 +21,6 @@ class GUI(Frame):
 		self.nivelG.set(125)
 		self.nivelB = IntVar()
 		self.nivelB.set(125)
-		self.ajustes = Ajustes()
 		self.tiempoInicial = 0
 		self.tiempoFinal = 0
 		self.tiempoDeEjecucion = 0
@@ -74,19 +72,19 @@ class GUI(Frame):
 	
 	def cargaAjustes(self):	
 		archivo = askopenfilename(initialdir='/imagen/MisAjustes')
-		self.ajustes = cargaAjustes(archivo)
+		self.imagenTratada.cargaAjustes(archivo)
 		self.actualizaControlesSegunAjustes()
 		
 	def actualizaControlesSegunAjustes(self):
-		self.nivelR.set(self.ajustes.r)
-		self.nivelG.set(self.ajustes.g)
-		self.nivelB.set(self.ajustes.b)
-		self.nivelBinarizado.set(self.ajustes.umbralBinarizado)
-		self.areaMin.set(self.ajustes.areaMin)
-		self.areaMax.set(self.ajustes.areaMax)
-		self.toleranciaWH.set(self.ajustes.toleranciaWH)
-		self.desviacionD.set(self.ajustes.desviacionD)
-		self.toleranciaLP.set(self.ajustes.toleranciaLP)
+		self.nivelR.set(self.imagenTratada.ajustes.r)
+		self.nivelG.set(self.imagenTratada.ajustes.g)
+		self.nivelB.set(self.imagenTratada.ajustes.b)
+		self.nivelBinarizado.set(self.imagenTratada.ajustes.umbralBinarizado)
+		self.areaMin.set(self.imagenTratada.ajustes.areaMin)
+		self.areaMax.set(self.imagenTratada.ajustes.areaMax)
+		self.toleranciaWH.set(self.imagenTratada.ajustes.toleranciaWH)
+		self.desviacionD.set(self.imagenTratada.ajustes.desviacionD)
+		self.toleranciaLP.set(self.imagenTratada.ajustes.toleranciaLP)
 		self.visorColor.config(  bg= self.conversorRGBaHEX() )
 	
 	def conversorRGBaHEX(self):
@@ -288,7 +286,7 @@ class GUI(Frame):
 	def actualizaAjustes(self):
 		
 		self.tiempoInicial = time.time()
-		self.ajustes.actualizaAjustes(self.nivelR.get(),
+		self.imagenTratada.ajustes.actualizaAjustes(self.nivelR.get(),
 									  self.nivelG.get() , 
 									  self.nivelB.get(), 
 									  self.nivelBinarizado.get(), 
@@ -308,11 +306,7 @@ class GUI(Frame):
 		self.visorImagenOriginal.after(10, self.actualizaVisorImagenTratada)
 		
 	def actualizaVisorImagenTratada(self):
-		img = self.imagenTratada.capturaYTrataLaImagen(self.nivelR.get(), 
-												  self.nivelG.get(),
-												  self.nivelB.get(),
-												  self.nivelBinarizado.get()
-												  )
+		img = self.imagenTratada.capturaYTrataLaImagen()
 		photo = ImageTk.PhotoImage(img.getPIL())
 		self.visorImagenTratada.photo = photo
 		self.visorImagenTratada.configure(image=photo)
@@ -321,12 +315,7 @@ class GUI(Frame):
 	def actualizaVisorImagenBlobs(self):
 	  
 		## print self.toleranciaWH.get(), self.desviacionD.get(), self.toleranciaLP.get()                    
-		img = self.imagenTratada.encuentraYFiltraBlobs(self.areaMin.get(),
-												  self.areaMax.get(),
-												  self.toleranciaWH.get(), 
-												  self.desviacionD.get(),
-												  self.toleranciaLP.get(),
-												  self.tipoVisualizacion.get())
+		img = self.imagenTratada.encuentraYFiltraBlobs(self.tipoVisualizacion.get())
 		photo = ImageTk.PhotoImage(img.getPIL())
 		self.visorImagenBlobs.photo = photo
 		self.visorImagenBlobs.configure(image=photo)
