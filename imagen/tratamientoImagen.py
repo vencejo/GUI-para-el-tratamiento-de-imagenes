@@ -117,7 +117,8 @@ class ImagenTratada():
 			
 	def dibujaEstructura(self, img):
 		if self.articulaciones != []:
-                        self.articulaciones = aux.ordenaListaPorDistanciaApunto(self.articulaciones, [0,480])
+			self.angulosHuesos = []
+			self.articulaciones = aux.ordenaListaPorDistanciaApunto(self.articulaciones, [0,480])
 			puntoInicial = self.articulaciones.pop()
 			img.dl().circle(puntoInicial, 10, Color.BLUE, width=5)
 			while self.articulaciones != []:
