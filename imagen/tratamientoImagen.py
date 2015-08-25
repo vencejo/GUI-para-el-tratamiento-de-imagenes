@@ -51,7 +51,7 @@ class ImagenTratada():
 		self.trataImagen()
 		return Image(self.rutaImagenTratada_Fase1)
 		
-	def encuentraYFiltraBlobs(self, tipoDibujo):
+	def encuentraYFiltraBlobs(self, tipoDibujo = 'estructura'):
 		
 		imagenBlobs = Image(self.rutaImagenTratada_Fase2).copy()
 		blobs = imagenBlobs.findBlobs()
@@ -72,12 +72,13 @@ class ImagenTratada():
 			if tipoDibujo == 'blobs':
 				self.dibujaBlobs(blobs)
 			elif tipoDibujo == 'estructura':
-				self.dibujaEstructura(imagenBlobs)
-		
-		# La imagen tratada tiene que ser guardada porque sino no funciona
-		# la integracion con Tkinter
-		imagenBlobs.save(self.rutaImagenBlobs)
-		return Image(self.rutaImagenBlobs)
+				self.listaAngulos = self.encuentraYDibujaAngulos(imagenBlobs)
+				
+			# La imagen tratada tiene que ser guardada porque sino no funciona
+			# la integracion con Tkinter
+			imagenBlobs.save(self.rutaImagenBlobs)
+			return Image(self.rutaImagenBlobs)
+			
 		
 	def filtroPorArea(self, blobs):
 		return blobs.filter((blobs.area()> self.ajustes.areaMin) & (blobs.area()< self.ajustes.areaMax))
@@ -115,7 +116,7 @@ class ImagenTratada():
 				for blob in self.todosLosCandidatos:
 						blob.draw(width=2, color=Color.YELLOW)
 			
-	def dibujaEstructura(self, img):
+	def encuentraYDibujaAngulos(self, img):
 		if self.articulaciones != []:
 			self.angulosHuesos = []
 			self.articulaciones = aux.ordenaListaPorDistanciaApunto(self.articulaciones, [0,480])
